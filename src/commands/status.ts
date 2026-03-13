@@ -2,7 +2,7 @@ import { createStripeClient } from '../stripe/client.js';
 import { readConfig } from '../config/store.js';
 import { showSummary, success, warn } from '../ui/display.js';
 
-export async function statusCommand(options: { secretKey?: string }): Promise<void> {
+export async function statusCommand(): Promise<void> {
   const config = await readConfig();
   if (!config) {
     warn('No .stripe-ez.json found. Run `stripe-ez init` first.');
@@ -11,9 +11,9 @@ export async function statusCommand(options: { secretKey?: string }): Promise<vo
 
   showSummary(config);
 
-  const key = options.secretKey ?? process.env.STRIPE_SECRET_KEY;
+  const key = process.env.STRIPE_SECRET_KEY;
   if (!key) {
-    warn('No secret key provided for connectivity check. Use --secret-key or STRIPE_SECRET_KEY.');
+    warn('No secret key provided for connectivity check. Set STRIPE_SECRET_KEY.');
     return;
   }
 

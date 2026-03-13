@@ -11,7 +11,6 @@ interface PublicProductConfig {
 
 interface PublicStripeConfig {
   mode: 'test' | 'live';
-  accountId: string;
   checkout: StripeEzConfig['checkout']['type'];
   publishableKey?: string;
   webhookEndpointId?: string;
@@ -48,7 +47,6 @@ export function renderPublicConfigJson(config: StripeEzConfig): string {
 
   const out: PublicStripeConfig = {
     mode: config.mode,
-    accountId: config.accountId,
     checkout: config.checkout.type,
     publishableKey: config.auth.publishableKey,
     webhookEndpointId: config.webhook?.stripeEndpointId,

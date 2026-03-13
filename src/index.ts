@@ -32,8 +32,7 @@ program.command('add-product').description('Add another product/price to existin
 program
   .command('status')
   .description('Check connection and show current config summary')
-  .option('--secret-key <key>', 'Stripe secret key for live connectivity check')
-  .action((options: { secretKey?: string }) => statusCommand(options));
+  .action(() => statusCommand());
 program.command('reset').description('Remove local config (does NOT delete Stripe resources)').action(resetCommand);
 
 program.parseAsync(process.argv);

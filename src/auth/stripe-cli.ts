@@ -1,4 +1,5 @@
 import { confirm } from '@inquirer/prompts';
+import { parse as parseToml } from '@iarna/toml';
 import { spawn } from 'node:child_process';
 import { promises as fs } from 'node:fs';
 import os from 'node:os';
@@ -40,7 +41,7 @@ function runCommand(command: string, args: string[], inheritStdio = false): Prom
     }
 
     child.on('error', (error) => {
-      resolve({ code: null, stdout, stderr: error.message });
+      resolve({ code: null, stdout, stderr: `Failed to run ${command}: ${error.name}` });
     });
 
     child.on('close', (code) => {
@@ -106,19 +107,27 @@ function getStripeCliConfigCandidates(): string[] {
 async function findStripeCliConfigPath(): Promise<string | undefined> {
   for (const configPath of getStripeCliConfigCandidates()) {
     try {
-      await fs.access(configPath);
+      const stat = await fs.stat(configPath);
+      if (process.platform !== 'win32' && (stat.mode & 0o077) !== 0) {
+        throw new Error(`Insecure Stripe CLI config permissions on ${configPath}. Run: chmod 600 ${configPath}`);
+      }
       return configPath;
-    } catch {
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+        continue;
+      }
+      if (error instanceof Error && error.message.startsWith('Insecure Stripe CLI config permissions')) {
+        throw error;
+      }
       // Continue to the next candidate path.
     }
   }
   return undefined;
 }
 
-function getTomlString(content: string, key: string): string | undefined {
-  const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const match = content.match(new RegExp(`^\\s*${escapedKey}\\s*=\\s*(['"])(.*?)\\1`, 'm'));
-  return match?.[2];
+function getTomlString(toml: Record<string, unknown>, key: string): string | undefined {
+  const value = toml[key];
+  return typeof value === 'string' ? value : undefined;
 }
 
 export async function readStripeCliCredentials(preferMode: 'test' | 'live' = 'test'): Promise<StripeCliCredentials | undefined> {
@@ -126,12 +135,13 @@ export async function readStripeCliCredentials(preferMode: 'test' | 'live' = 'te
   if (!configPath) return undefined;
 
   const content = await fs.readFile(configPath, 'utf8');
-  const testSecret = getTomlString(content, 'test_mode_api_key');
-  const liveSecret = getTomlString(content, 'live_mode_api_key');
+  const parsed = parseToml(content) as Record<string, unknown>;
+  const testSecret = getTomlString(parsed, 'test_mode_api_key');
+  const liveSecret = getTomlString(parsed, 'live_mode_api_key');
   const testPublishable =
-    getTomlString(content, 'test_mode_publishable_key') ?? getTomlString(content, 'test_mode_pub_key');
+    getTomlString(parsed, 'test_mode_publishable_key') ?? getTomlString(parsed, 'test_mode_pub_key');
   const livePublishable =
-    getTomlString(content, 'live_mode_publishable_key') ?? getTomlString(content, 'live_mode_pub_key');
+    getTomlString(parsed, 'live_mode_publishable_key') ?? getTomlString(parsed, 'live_mode_pub_key');
 
   if (preferMode === 'live' && liveSecret) {
     return {

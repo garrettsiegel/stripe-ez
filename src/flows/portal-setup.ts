@@ -1,5 +1,7 @@
 import { confirm, input } from '@inquirer/prompts';
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export interface PortalSetupResult {
   enabled: boolean;
   businessName?: string;
@@ -23,7 +25,12 @@ export async function setupPortalPrompt(): Promise<PortalSetupResult> {
 
   const supportEmail = await input({
     message: '\nSupport email (optional, shown in portal)',
-    default: ''
+    default: '',
+    validate: (value) => {
+      const trimmed = value.trim();
+      if (!trimmed) return true;
+      return EMAIL_REGEX.test(trimmed) ? true : 'Please enter a valid email address.';
+    }
   });
 
   return {

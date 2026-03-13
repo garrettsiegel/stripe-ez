@@ -27,7 +27,7 @@ export async function readConfig(cwd = process.cwd()): Promise<StripeEzConfig | 
 
 export async function writeConfig(config: StripeEzConfig, cwd = process.cwd()): Promise<void> {
   const configPath = getConfigPath(cwd);
-  await fs.writeFile(configPath, `${JSON.stringify(config, null, 2)}\n`, 'utf8');
+  await fs.writeFile(configPath, `${JSON.stringify(config, null, 2)}\n`, { encoding: 'utf8', mode: 0o600 });
 }
 
 export async function removeConfig(cwd = process.cwd()): Promise<void> {

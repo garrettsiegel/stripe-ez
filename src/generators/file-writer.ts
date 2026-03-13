@@ -16,11 +16,16 @@ export async function writeGeneratedFiles(
   files: GeneratedFile[],
   cwd = process.cwd()
 ): Promise<WriteGeneratedFilesResult> {
+  const rootDir = path.resolve(cwd);
   const written: string[] = [];
   const skipped: string[] = [];
 
   for (const file of files) {
-    const fullPath = path.join(cwd, file.path);
+    const fullPath = path.resolve(path.join(cwd, file.path));
+    const relativeFromRoot = path.relative(rootDir, fullPath);
+    if (relativeFromRoot.startsWith('..') || path.isAbsolute(relativeFromRoot)) {
+      throw new Error(`Refusing to write outside project directory: ${file.path}`);
+    }
     let exists = false;
 
     try {

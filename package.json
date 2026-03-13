@@ -32,6 +32,7 @@
     "saas"
   ],
   "dependencies": {
+    "@iarna/toml": "^2.2.5",
     "@inquirer/prompts": "^7.3.2",
     "chalk": "^5.4.1",
     "commander": "^14.0.1",
@@ -41,9 +42,9 @@
   },
   "devDependencies": {
     "@types/node": "^22.15.30",
-    "@vitest/coverage-v8": "^2.1.9",
+    "@vitest/coverage-v8": "^4.1.0",
     "tsx": "^4.20.1",
     "typescript": "^5.8.3",
-    "vitest": "^2.1.9"
+    "vitest": "^4.1.0"
   }
 }

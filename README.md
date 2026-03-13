@@ -41,7 +41,7 @@ npx stripe-ez
 | `stripe-ez` | Default guided setup flow | Same behavior as `stripe-ez init` |
 | `stripe-ez init` | Full guided setup flow | Supports `--no-banner` |
 | `stripe-ez add-product` | Add product/prices to existing setup | Requires `STRIPE_SECRET_KEY` in env |
-| `stripe-ez status` | Show local setup summary and optionally check Stripe connectivity | Use `--secret-key <key>` or set `STRIPE_SECRET_KEY` |
+| `stripe-ez status` | Show local setup summary and optionally check Stripe connectivity | Set `STRIPE_SECRET_KEY` |
 | `stripe-ez reset` | Remove local `.stripe-ez.json` | Does not delete Stripe resources |
 
 Global option:
@@ -115,7 +115,7 @@ Expected result:
 Set your key, then run add-product:
 
 ```bash
-export STRIPE_SECRET_KEY=sk_test_xxx
+export STRIPE_SECRET_KEY=YOUR_STRIPE_SECRET_KEY
 npm run dev -- add-product
 ```
 
@@ -135,7 +135,7 @@ npm run dev -- status
 Summary plus connectivity check:
 
 ```bash
-npm run dev -- status --secret-key sk_test_xxx
+STRIPE_SECRET_KEY=YOUR_STRIPE_SECRET_KEY npm run dev -- status
 ```
 
 Expected result:
