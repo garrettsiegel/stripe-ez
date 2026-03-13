@@ -7,7 +7,15 @@
   --bg-soft:        #0a0a0a;
   --surface:        #111111;
   --surface-strong: #1a1a1a;
-  --header-bg:      rgba(0, 0, 0, 0.8);
+  --header-bg:      rgba(8, 10, 14, 0.68);
+  --header-tint:    rgba(255, 255, 255, 0.07);
+  --header-border:  rgba(255, 255, 255, 0.12);
+  --header-sheen:   rgba(255, 255, 255, 0.24);
+  --header-shadow:  0 8px 28px rgba(0, 0, 0, 0.34), 0 1px 0 rgba(255, 255, 255, 0.03);
+  --header-link-bg: rgba(255, 255, 255, 0.06);
+  --header-link-border: rgba(255, 255, 255, 0.14);
+  --header-control-bg: rgba(255, 255, 255, 0.04);
+  --header-control-hover-bg: rgba(255, 255, 255, 0.08);
   --border:         rgba(255, 255, 255, 0.07);
   --border-strong:  rgba(255, 255, 255, 0.12);
   --text:           #ededed;
@@ -33,7 +41,15 @@ html[data-theme="light"] {
   --bg-soft:        #fafafa;
   --surface:        #f5f5f5;
   --surface-strong: #ffffff;
-  --header-bg:      rgba(255, 255, 255, 0.85);
+  --header-bg:      rgba(255, 255, 255, 0.72);
+  --header-tint:    rgba(255, 255, 255, 0.78);
+  --header-border:  rgba(17, 24, 39, 0.15);
+  --header-sheen:   rgba(255, 255, 255, 0.9);
+  --header-shadow:  0 10px 28px rgba(17, 24, 39, 0.12), 0 1px 0 rgba(255, 255, 255, 0.7);
+  --header-link-bg: rgba(255, 255, 255, 0.55);
+  --header-link-border: rgba(17, 24, 39, 0.15);
+  --header-control-bg: rgba(255, 255, 255, 0.4);
+  --header-control-hover-bg: rgba(255, 255, 255, 0.7);
   --border:         rgba(0, 0, 0, 0.08);
   --border-strong:  rgba(0, 0, 0, 0.14);
   --text:           #111111;
@@ -106,13 +122,27 @@ section.section + section.section {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: var(--header-bg);
-  border-bottom: 1px solid var(--border);
-  backdrop-filter: saturate(180%) blur(6px);
+  isolation: isolate;
+  background:
+    linear-gradient(180deg, var(--header-tint) 0%, transparent 100%),
+    var(--header-bg);
+  border-bottom: 1px solid var(--header-border);
+  box-shadow: var(--header-shadow);
+  -webkit-backdrop-filter: saturate(185%) blur(14px);
+  backdrop-filter: saturate(185%) blur(14px);
+}
+
+.site-header::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent 0%, var(--header-sheen) 20%, var(--header-sheen) 80%, transparent 100%);
 }
 
 .site-header__inner {
-  height: 60px;
+  height: 62px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -164,11 +194,16 @@ section.section + section.section {
   font-size: 0.83rem;
   font-weight: 500;
   color: var(--text-soft);
+  border: 1px solid transparent;
   border-radius: var(--radius-md);
-  transition: color 120ms;
+  transition: color 120ms, border-color 120ms, background-color 120ms;
 }
 
-.site-nav__links a:hover { color: var(--text); }
+.site-nav__links a:hover {
+  color: var(--text);
+  border-color: var(--header-link-border);
+  background: var(--header-link-bg);
+}
 
 /* Theme toggle */
 .theme-toggle {
@@ -182,15 +217,16 @@ section.section + section.section {
   font-family: var(--mono);
   letter-spacing: 0.04em;
   color: var(--text-muted);
-  background: transparent;
-  border: 1px solid var(--border);
+  background: var(--header-control-bg);
+  border: 1px solid var(--header-link-border);
   border-radius: var(--radius-md);
-  transition: color 120ms, border-color 120ms;
+  transition: color 120ms, border-color 120ms, background-color 120ms;
 }
 
 .theme-toggle:hover {
   color: var(--text-soft);
-  border-color: var(--border-strong);
+  border-color: var(--header-border);
+  background: var(--header-control-hover-bg);
 }
 
 .theme-toggle__dot {
@@ -245,6 +281,22 @@ section.section + section.section {
 .button--ghost:hover {
   color: var(--text);
   border-color: var(--border-strong);
+}
+
+.site-nav .button--ghost {
+  background: var(--header-control-bg);
+  border-color: var(--header-link-border);
+}
+
+.site-nav .button--ghost:hover {
+  background: var(--header-control-hover-bg);
+  border-color: var(--header-border);
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .site-header {
+    background: var(--bg-soft);
+  }
 }
 
 /* ─── Eyebrow ─────────────────────────────────────────────────── */
@@ -668,7 +720,12 @@ html[data-theme="light"] .terminal__line { color: #bbb; }
 @media (max-width: 840px) {
   :root { --container: min(1120px, calc(100vw - 1.5rem)); }
 
-  .site-header { position: static; backdrop-filter: none; }
+  .site-header {
+    position: sticky;
+    top: 0;
+    -webkit-backdrop-filter: saturate(170%) blur(10px);
+    backdrop-filter: saturate(170%) blur(10px);
+  }
 
   .site-header__inner {
     height: auto;

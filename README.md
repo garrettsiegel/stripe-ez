@@ -4,6 +4,11 @@ Zero-friction Stripe setup CLI.
 
 `stripe-ez` walks you through Stripe setup and generates the files you need to start taking payments quickly.
 
+## Links
+
+- Website: https://stripe-ez.com
+- Repository: https://github.com/garrettsiegel/stripe-ez
+
 ## What It Does
 
 - Guides Stripe authentication (Stripe CLI login or manual API key)
@@ -32,6 +37,30 @@ As a published CLI:
 
 ```bash
 npx stripe-ez
+```
+
+## Website
+
+This repo also includes the Stripe EZ marketing website.
+
+Live site:
+
+- https://stripe-ez.com
+
+Run locally:
+
+```bash
+cd website
+npm install
+npm run dev
+```
+
+Website scripts:
+
+```bash
+npm run build      # type-check + production build
+npm run preview    # preview production build locally
+npm run typecheck  # TypeScript project check
 ```
 
 ## Commands
