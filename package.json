@@ -1,0 +1,49 @@
+{
+  "name": "stripe-ez",
+  "version": "1.0.0",
+  "description": "Set up Stripe payments in under 5 minutes with a guided CLI",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "stripe-ez": "./dist/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "stripe",
+    "payments",
+    "cli",
+    "setup",
+    "checkout",
+    "subscriptions",
+    "saas"
+  ],
+  "dependencies": {
+    "@inquirer/prompts": "^7.3.2",
+    "chalk": "^5.4.1",
+    "commander": "^14.0.1",
+    "open": "^10.2.0",
+    "ora": "^8.2.0",
+    "stripe": "^18.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.30",
+    "@vitest/coverage-v8": "^2.1.9",
+    "tsx": "^4.20.1",
+    "typescript": "^5.8.3",
+    "vitest": "^2.1.9"
+  }
+}

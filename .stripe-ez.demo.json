@@ -1,0 +1,63 @@
+{
+  "version": "1.0.0",
+  "accountId": "acct_demo_1234567890",
+  "mode": "test",
+  "createdAt": "2026-03-12T08:30:00Z",
+  "auth": {
+    "method": "api_key",
+    "keyHint": "sk_test...cdef"
+  },
+  "products": [
+    {
+      "name": "Starter Plan",
+      "description": "Demo monthly starter plan",
+      "stripeProductId": "prod_demo_starter",
+      "type": "subscription",
+      "trialDays": 14,
+      "prices": [
+        {
+          "amount": 900,
+          "currency": "usd",
+          "interval": "month",
+          "stripePriceId": "price_demo_starter_month",
+          "envVarName": "STARTER_PLAN_USD_MONTH_PRICE_ID"
+        },
+        {
+          "amount": 9000,
+          "currency": "usd",
+          "interval": "year",
+          "stripePriceId": "price_demo_starter_year",
+          "envVarName": "STARTER_PLAN_USD_YEAR_PRICE_ID"
+        }
+      ]
+    },
+    {
+      "name": "Template Pack",
+      "description": "Demo one-time digital product",
+      "stripeProductId": "prod_demo_template",
+      "type": "one_time",
+      "prices": [
+        {
+          "amount": 4900,
+          "currency": "usd",
+          "stripePriceId": "price_demo_template_once",
+          "envVarName": "TEMPLATE_PACK_USD_PRICE_ID"
+        }
+      ]
+    }
+  ],
+  "webhook": {
+    "url": "https://example.com/api/webhooks/stripe",
+    "stripeEndpointId": "we_demo_1234567890",
+    "events": [
+      "payment_intent.succeeded",
+      "checkout.session.completed",
+      "customer.subscription.created",
+      "customer.subscription.deleted"
+    ],
+    "signingSecretHint": "whsec_de...cdef"
+  },
+  "checkout": {
+    "type": "hosted"
+  }
+}

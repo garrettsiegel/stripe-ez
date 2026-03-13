@@ -1,0 +1,34 @@
+import { confirm, input } from '@inquirer/prompts';
+
+export interface PortalSetupResult {
+  enabled: boolean;
+  businessName?: string;
+  supportEmail?: string;
+}
+
+export async function setupPortalPrompt(): Promise<PortalSetupResult> {
+  const enabled = await confirm({
+    message: '\nEnable customer portal? (customers can manage subscriptions and payment methods)',
+    default: false
+  });
+
+  if (!enabled) {
+    return { enabled: false };
+  }
+
+  const businessName = await input({
+    message: '\nBusiness name shown to customers in the portal',
+    validate: (value) => (value.trim().length > 0 ? true : 'Business name is required.')
+  });
+
+  const supportEmail = await input({
+    message: '\nSupport email (optional, shown in portal)',
+    default: ''
+  });
+
+  return {
+    enabled: true,
+    businessName: businessName.trim(),
+    supportEmail: supportEmail.trim() || undefined
+  };
+}

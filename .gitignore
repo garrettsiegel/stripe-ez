@@ -1,0 +1,10 @@
+node_modules
+dist
+.env
+.stripe-ez.json
+coverage
+.DS_Store
+.github/agents/
+.github/concise-responses.instructions.md
+.github/concise-responses.mdc
+.github/copilot-instructions.md
