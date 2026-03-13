@@ -125,44 +125,79 @@ async function findStripeCliConfigPath(): Promise<string | undefined> {
   return undefined;
 }
 
-function getTomlString(toml: Record<string, unknown>, key: string): string | undefined {
-  const value = toml[key];
-  return typeof value === 'string' ? value : undefined;
+function findTomlString(parsed: Record<string, unknown>, key: string): string | undefined {
+  // Check top-level first (flat config format)
+  if (typeof parsed[key] === 'string') return parsed[key] as string;
+
+  // Walk into nested profile sections like [default] or [profiles.default]
+  for (const section of Object.values(parsed)) {
+    if (section && typeof section === 'object' && !Array.isArray(section)) {
+      const nested = section as Record<string, unknown>;
+      if (typeof nested[key] === 'string') return nested[key] as string;
+      for (const subsection of Object.values(nested)) {
+        if (subsection && typeof subsection === 'object' && !Array.isArray(subsection)) {
+          const deep = subsection as Record<string, unknown>;
+          if (typeof deep[key] === 'string') return deep[key] as string;
+        }
+      }
+    }
+  }
+
+  return undefined;
 }
 
-export async function readStripeCliCredentials(preferMode: 'test' | 'live' = 'test'): Promise<StripeCliCredentials | undefined> {
+interface StripeCliStoredCredentials {
+  testSecret?: string;
+  testPublishable?: string;
+  liveSecret?: string;
+  livePublishable?: string;
+}
+
+async function readStripeCliStoredCredentials(): Promise<StripeCliStoredCredentials | undefined> {
   const configPath = await findStripeCliConfigPath();
   if (!configPath) return undefined;
 
   const content = await fs.readFile(configPath, 'utf8');
   const parsed = parseToml(content) as Record<string, unknown>;
-  const testSecret = getTomlString(parsed, 'test_mode_api_key');
-  const liveSecret = getTomlString(parsed, 'live_mode_api_key');
-  const testPublishable =
-    getTomlString(parsed, 'test_mode_publishable_key') ?? getTomlString(parsed, 'test_mode_pub_key');
-  const livePublishable =
-    getTomlString(parsed, 'live_mode_publishable_key') ?? getTomlString(parsed, 'live_mode_pub_key');
 
-  if (preferMode === 'live' && liveSecret) {
+  return {
+    testSecret: findTomlString(parsed, 'test_mode_api_key'),
+    liveSecret: findTomlString(parsed, 'live_mode_api_key'),
+    testPublishable:
+      findTomlString(parsed, 'test_mode_publishable_key') ?? findTomlString(parsed, 'test_mode_pub_key'),
+    livePublishable:
+      findTomlString(parsed, 'live_mode_publishable_key') ?? findTomlString(parsed, 'live_mode_pub_key')
+  };
+}
+
+function selectStripeCliCredentials(
+  storedCredentials: StripeCliStoredCredentials | undefined,
+  preferMode: 'test' | 'live'
+): StripeCliCredentials | undefined {
+  if (!storedCredentials) return undefined;
+
+  if (preferMode === 'live') {
+    if (!storedCredentials.liveSecret) return undefined;
+
     return {
-      secretKey: liveSecret,
-      publishableKey: livePublishable,
+      secretKey: storedCredentials.liveSecret,
+      publishableKey: storedCredentials.livePublishable,
       mode: 'live'
     };
   }
 
-  if (testSecret) {
+  if (storedCredentials.testSecret) {
     return {
-      secretKey: testSecret,
-      publishableKey: testPublishable,
+      secretKey: storedCredentials.testSecret,
+      publishableKey: storedCredentials.testPublishable,
       mode: 'test'
     };
   }
 
-  if (liveSecret) {
+  if (storedCredentials.liveSecret) {
     return {
-      secretKey: liveSecret,
-      publishableKey: livePublishable,
+      secretKey: storedCredentials.liveSecret,
+      publishableKey: storedCredentials.livePublishable,
       mode: 'live'
     };
   }
@@ -170,10 +205,39 @@ export async function readStripeCliCredentials(preferMode: 'test' | 'live' = 'te
   return undefined;
 }
 
+function getMissingStripeCliCredentialsMessage(
+  preferMode: 'test' | 'live',
+  storedCredentials: StripeCliStoredCredentials | undefined,
+  afterLogin = false
+): string {
+  if (preferMode === 'live') {
+    if (storedCredentials?.testSecret && !storedCredentials.liveSecret) {
+      return 'Stripe CLI only has test-mode keys. Log in with live credentials or paste live API keys manually.';
+    }
+
+    return afterLogin
+      ? 'Could not find live Stripe API keys in Stripe CLI config after login. Log in with live credentials or paste live API keys manually.'
+      : 'Could not find live Stripe API keys in Stripe CLI config. Log in with live credentials or paste live API keys manually.';
+  }
+
+  return 'Could not find Stripe API keys in Stripe CLI config after login.';
+}
+
+export async function readStripeCliCredentials(preferMode: 'test' | 'live' = 'test'): Promise<StripeCliCredentials | undefined> {
+  const storedCredentials = await readStripeCliStoredCredentials();
+  return selectStripeCliCredentials(storedCredentials, preferMode);
+}
+
 export async function ensureStripeCliAuthenticated(preferMode: 'test' | 'live' = 'test'): Promise<StripeCliCredentials> {
   await ensureStripeCliInstalled();
 
-  let credentials = await readStripeCliCredentials(preferMode);
+  const storedCredentials = await readStripeCliStoredCredentials();
+  let credentials = selectStripeCliCredentials(storedCredentials, preferMode);
+
+  if (!credentials && preferMode === 'live' && storedCredentials) {
+    throw new Error(getMissingStripeCliCredentialsMessage(preferMode, storedCredentials));
+  }
+
   if (!credentials) {
     const shouldLogin = await confirm({
       message: '\nStripe CLI is installed but not logged in. Run `stripe login` now? (opens browser)',
@@ -194,7 +258,7 @@ export async function ensureStripeCliAuthenticated(preferMode: 'test' | 'live' =
   }
 
   if (!credentials) {
-    throw new Error('Could not find Stripe API keys in Stripe CLI config after login.');
+    throw new Error(getMissingStripeCliCredentialsMessage(preferMode, await readStripeCliStoredCredentials(), true));
   }
 
   const cliVersion = await getStripeCliVersion();

@@ -433,6 +433,105 @@ describe('initCommand integration (composed mocks)', () => {
     expect(mocks.ui.warn).toHaveBeenCalledWith('You are in TEST mode. Add --live in the future when you are ready for production.');
   });
 
+  it('updates an existing test setup to live mode and writes live env values when live auth credentials are returned', async () => {
+    const existingConfig = {
+      version: '1.0.0',
+      accountId: 'acct_test_existing',
+      mode: 'test',
+      createdAt: '2026-01-01T00:00:00.000Z',
+      auth: {
+        method: 'stripe_cli',
+        keyHint: 'sk_test...old',
+        publishableKey: 'pk_test_old'
+      },
+      products: [
+        {
+          name: 'Starter',
+          type: 'subscription',
+          stripeProductId: 'prod_starter',
+          prices: [
+            {
+              amount: 500,
+              currency: 'usd',
+              interval: 'month',
+              stripePriceId: 'price_starter_month',
+              envVarName: 'STARTER_USD_MONTH_PRICE_ID'
+            }
+          ]
+        }
+      ],
+      checkout: { type: 'hosted' }
+    };
+    const liveSecret = ['sk', 'live', 'replacement123'].join('_');
+    const livePublishable = ['pk', 'live', 'replacement123'].join('_');
+    const renderedEnv = [
+      `STRIPE_SECRET_KEY=${liveSecret}`,
+      `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${livePublishable}`,
+      ''
+    ].join('\n');
+
+    mocks.store.readConfig.mockResolvedValue(existingConfig);
+    mocks.prompts.select.mockResolvedValue('update');
+    mocks.prompts.checkbox.mockResolvedValue(['env']);
+    mocks.flows.runAuthenticationFlow.mockResolvedValue({
+      accountId: 'acct_live_456',
+      mode: 'live',
+      secretKey: liveSecret,
+      method: 'stripe_cli',
+      keyHint: 'sk_live...t123',
+      publishableKey: livePublishable,
+      stripeCliVersion: 'stripe version 1.24.0'
+    });
+    mocks.flows.collectProducts.mockResolvedValue([
+      {
+        name: 'Growth',
+        type: 'subscription',
+        prices: [{ amount: 1500, currency: 'usd', interval: 'month' }]
+      }
+    ]);
+    mocks.stripe.createProductWithPrices.mockResolvedValue({
+      name: 'Growth',
+      description: 'Growth plan',
+      stripeProductId: 'prod_growth',
+      type: 'subscription',
+      prices: [
+        {
+          amount: 1500,
+          currency: 'usd',
+          interval: 'month',
+          stripePriceId: 'price_growth_month'
+        }
+      ]
+    });
+    mocks.generators.renderEnv.mockReturnValue(renderedEnv);
+
+    const { initCommand } = await import('../../src/commands/init.js');
+    await initCommand({ banner: false });
+
+    expect(mocks.generators.renderEnv).toHaveBeenCalledWith({
+      config: expect.objectContaining({
+        mode: 'live',
+        accountId: 'acct_live_456',
+        auth: expect.objectContaining({
+          publishableKey: livePublishable,
+          stripeCliVersion: 'stripe version 1.24.0'
+        })
+      }),
+      secretKey: liveSecret,
+      publishableKey: livePublishable,
+      webhookSecret: undefined
+    });
+    expect(mocks.generators.writeEnvFile).toHaveBeenCalledWith(renderedEnv);
+
+    const writtenConfig = mocks.store.writeConfig.mock.calls[0][0];
+    expect(writtenConfig.mode).toBe('live');
+    expect(writtenConfig.accountId).toBe('acct_live_456');
+    expect(writtenConfig.auth.publishableKey).toBe(livePublishable);
+    expect(mocks.ui.warn).not.toHaveBeenCalledWith(
+      'You are in TEST mode. Add --live in the future when you are ready for production.'
+    );
+  });
+
   it('handles thrown errors via toUserFacingError', async () => {
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     mocks.flows.runAuthenticationFlow.mockRejectedValue(new Error('boom'));
