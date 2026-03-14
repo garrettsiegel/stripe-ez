@@ -12,7 +12,7 @@ program
   .name('stripe-ez')
   .description('Set up Stripe payments in under 5 minutes with a guided CLI')
   .option('--no-banner', 'Skip startup banner output')
-  .version('1.0.0');
+  .version('1.0.7');
 
 program.action(() => {
   const globalBanner = program.opts<{ banner?: boolean }>().banner;

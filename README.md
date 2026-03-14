@@ -1,5 +1,7 @@
 # stripe-ez
 
+[![Socket Security](https://github.com/garrettsiegel/stripe-ez/actions/workflows/socket.yml/badge.svg)](https://github.com/garrettsiegel/stripe-ez/actions/workflows/socket.yml)
+
 Zero-friction Stripe setup CLI.
 
 `stripe-ez` walks you through Stripe setup and generates the files you need to start taking payments quickly.
