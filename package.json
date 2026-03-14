@@ -1,8 +1,16 @@
 {
   "name": "stripe-ez",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Set up Stripe payments in under 5 minutes with a guided CLI",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/garrettsiegel/stripe-ez.git"
+  },
+  "homepage": "https://github.com/garrettsiegel/stripe-ez#readme",
+  "bugs": {
+    "url": "https://github.com/garrettsiegel/stripe-ez/issues"
+  },
   "type": "module",
   "bin": {
     "stripe-ez": "./dist/index.js"
